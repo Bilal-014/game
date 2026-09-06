@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eded tapmaca</title>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #1e1e2f, #2a2a40);
+            --container-bg: #2b2b42;
+            --text-color: #fff;
+            --subtext-color: #aaa;
+            --input-bg: #1a1a2e;
+            --input-border: #444;
+            --input-color: #fff;
+            --badge-bg: #ffcc00;
+            --badge-color: #222;
+        }
+
+        .light-mode {
+            --bg-gradient: linear-gradient(135deg, #f0f2f5, #d9e2ec);
+            --container-bg: #ffffff;
+            --text-color: #333333;
+            --subtext-color: #666666;
+            --input-bg: #f9f9f9;
+            --input-border: #cccccc;
+            --input-color: #333333;
+            --badge-bg: #ffaa00;
+            --badge-color: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .game-container {
+            background: var(--container-bg);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+            box-sizing: border-box;
+            transition: background 0.3s;
+        }
+
+        .top-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .level-badge {
+            background: var(--badge-bg);
+            color: var(--badge-color);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .theme-btn {
+            background: transparent;
+            border: 2px solid var(--input-border);
+            color: var(--text-color);
+            padding: 5px 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: 0.3s;
+            margin-top: 0 !important;
+        }
+
+        .theme-btn:hover {
+            opacity: 0.8;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+            color: #00d2ff;
+        }
+
+        p {
+            color: var(--subtext-color);
+            font-size: 14px;
+        }
+
+        .range-text {
+            font-size: 18px;
+            color: #ff9900;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            font-size: 18px; /* Mobildə ekranın böyüməməsi üçün 16px-dən böyük və ya bərabər olmalıdır */
+            border: 2px solid var(--input-border);
+            border-radius: 8px;
+            background: var(--input-bg);
+            color: var(--input-color);
+            text-align: center;
+            outline: none;
+            box-sizing: border-box;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            border-color: #00d2ff;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 12px 20px;
+            font-size: 16px;
+            background: #00d2ff;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #0099cc;
+        }
+
+        .start-btn {
+            background: #2ecc71;
+            color: #fff;
+        }
+
+        .start-btn:hover {
+            background: #27ae60;
+        }
+
+        .message {
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            min-height: 24px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body id="pageBody">
+
+    <div class="game-container">
+        <div id="startScreen">
+            <div style="display: flex; justify-content: flex-end;">
+                <button class="theme-btn" onclick="toggleTheme()">🌓 görünüş</button>
+            </div>
+            <h2>Ədədi Tap Oyunu </h2>
+            <p>15 seviyyeden ibaretdir/p>
+            <button class="start-btn" onclick="startGame()">Start 🚀</button>
+        </div>
+
+        <div id="gameScreen" class="hidden">
+            <div class="top-controls">
+                <div class="level-badge" id="levelBadge">Level 1 / 15</div>
+                <button class="theme-btn" onclick="toggleTheme()">🌓 Rejim</button>
+            </div>
+            
+            <h2>Düzgün ədədi tap</h2>
+            <p id="instruction">1 ilə 100 arasında bir ədəd seçildi.</p>
+            <div class="range-text" id="rangeText">Aralıq: 1 - 100</div>
+            
+            <input type="number" id="guessInput" placeholder="Təxmininizi daxil edin..." onkeypress="handleKeyPress(event)">
+            
+            <button onclick="checkGuess()">Yoxla</button>
+            
+            <div class="message" id="message"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentLevel = 1;
+        const maxLevels = 15;
+        let targetNumber = 0;
+        let maxRange = 100;
+        let attemptCount = 0;
+
+        // Səhifə yüklənəndə yaddaşdakı level və mövzunu yoxlayırıq
+        window.onload = function() {
+            const savedLevel = localStorage.getItem("savedLevel");
+            if (savedLevel) {
+                currentLevel = parseInt(savedLevel);
+                if (currentLevel > maxLevels) {
+                    currentLevel = 1;
+                }
+            }
+
+            const savedTheme = localStorage.getItem("theme");
+            if (savedTheme === "light") {
+                document.getElementById("pageBody").classList.add("light-mode");
+            }
+        };
+
+        // Dark / Light mode dəyişdirici
+        function toggleTheme() {
+            const body = document.getElementById("pageBody");
+            body.classList.toggle("light-mode");
+            
+            if (body.classList.contains("light-mode")) {
+                localStorage.setItem("theme", "light");
+            } else {
+                localStorage.setItem("theme", "dark");
+            }
+        }
+
+        function startGame() {
+            document.getElementById("startScreen").classList.add("hidden");
+            document.getElementById("gameScreen").classList.remove("hidden");
+            startLevel();
+        }
+
+        function startLevel() {
+            maxRange = 100 + (currentLevel - 1) * 20;
+            targetNumber = Math.floor(Math.random() * maxRange) + 1;
+            attemptCount = 0;
+
+            document.getElementById("levelBadge").innerText = `Level ${currentLevel} / ${maxLevels}`;
+            document.getElementById("instruction").innerText = `1 ilə ${maxRange} arasındakı ədədi tap!`;
+            document.getElementById("rangeText").innerText = `Aralıq: 1 - ${maxRange}`;
+            
+            const inputField = document.getElementById("guessInput");
+            inputField.value = "";
+            document.getElementById("message").innerText = "";
+            
+            // Mobil cihazlarda səhifə açılan kimi input aktivləşsin və klaviatura gəlsin
+            inputField.focus();
+
+            localStorage.setItem("savedLevel", currentLevel);
+        }
+
+        function checkGuess() {
+            const inputVal = document.getElementById("guessInput").value;
+            const guess = parseInt(inputVal);
+            const messageEl = document.getElementById("message");
+
+            if (isNaN(guess)) {
+                messageEl.style.color = "#ff4d4d";
+                messageEl.innerText = "Zəhmət olmasa rəqəm daxil edin!";
+                return;
+            }
+
+            attemptCount++;
+
+            if (guess === targetNumber) {
+                messageEl.style.color = "#2ecc71";
+                if (currentLevel < maxLevels) {
+                    messageEl.innerText = `🎉 Təbriklər! Level ${currentLevel} keçildi (${attemptCount} cəhd). Növbəti levelə keçilir...`;
+                    currentLevel++;
+                    localStorage.setItem("savedLevel", currentLevel);
+                    setTimeout(startLevel, 2000);
+                } else {
+                    messageEl.innerText = `🏆 Təbriklər Kral! Oyunu tamamilə bitirdin! 🎉`;
+                    localStorage.removeItem("savedLevel");
+                }
+            } else if (guess > targetNumber) {
+                messageEl.style.color = "#ffaa00";
+                messageEl.innerText = "Texminini azalt 🔽";
+            } else {
+                messageEl.style.color = "#ffaa00";
+                messageEl.innerText = "Texminini coxalt 🔼";
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === "Enter") {
+                checkGuess();
+            }
+        }
+    </script>
+
+</body>
+</html>
